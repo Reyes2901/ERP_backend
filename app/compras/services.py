@@ -46,7 +46,8 @@ class CompraService:
             self.producto_repo.update_stock(
                 producto_id=detalle.producto_id,
                 cantidad=detalle.cantidad,
-                es_incremento=True  # IMPORTANTE: Sumar al stock
+                es_incremento=True,  # IMPORTANTE: Sumar al stock
+                nuevo_precio=detalle.precio_unitario
             )
 
     def create_compra(self, compra_data: schemas.CompraCreate):
@@ -57,24 +58,25 @@ class CompraService:
         3. Crea la compra y sus detalles
         4. ACTUALIZA EL STOCK (suma cantidades)
         """
-        # 1. Calcular todos los detalles y el total
-        detalles, total = self._calcular_detalles(compra_data.productos)
+        try:
+            # 1. Calcular todos los detalles y el total
+            detalles, total = self._calcular_detalles(compra_data.productos)
+            # 2. Crear la compra (dentro de una transacción)
+            nueva_compra = self.compra_repo.create_compra_con_detalles(
+                proveedor=compra_data.proveedor,
+                total=total,
+                detalles=detalles
+            )
+            # 3. Actualizar el stock de los productos (SUMAR)
+            self._actualizar_stock_productos(detalles)
+            # 4. Confirmar la transacción
+            self.db.commit()
+            self.db.refresh(nueva_compra)   
+            return nueva_compra
+        except Exception:
+            self.db.rollback()
+            raise
 
-        # 2. Crear la compra (dentro de una transacción)
-        nueva_compra = self.compra_repo.create_compra_con_detalles(
-            proveedor=compra_data.proveedor,
-            total=total,
-            detalles=detalles
-        )
-
-        # 3. Actualizar el stock de los productos (SUMAR)
-        self._actualizar_stock_productos(detalles)
-
-        # 4. Confirmar la transacción
-        self.db.commit()
-        self.db.refresh(nueva_compra)
-        
-        return nueva_compra
 
     def get_all_compras(self, skip: int = 0, limit: int = 100, proveedor: str = None):
         """Obtener todas las compras"""

@@ -13,8 +13,8 @@ class ClienteService:
             raise ConflictError(f"Ya existe un cliente con el email '{cliente.email}'.")
         return self.repo.create(cliente)
 
-    def get_all_clientes(self, skip: int = 0, limit: int = 100):
-        return self.repo.get_all(skip, limit)
+    def get_all_clientes(self, skip: int = 0, limit: int = 100, nombre: str=None):
+        return self.repo.get_all(skip, limit,nombre)
 
     def get_cliente(self, cliente_id: int):
         return self.repo.get_by_id(cliente_id)

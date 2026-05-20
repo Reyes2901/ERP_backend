@@ -43,7 +43,7 @@ class InventarioRepository:
         self.db.commit()
         return True
 
-    def update_stock(self, producto_id: int, cantidad: int, es_incremento: bool = True):
+    def update_stock(self, producto_id: int, cantidad: int, es_incremento: bool = True, nuevo_precio: float | None =None):
         producto = self.get_by_id(producto_id)
         if es_incremento:
             producto.stock += cantidad
@@ -51,6 +51,7 @@ class InventarioRepository:
             if producto.stock < cantidad:
                 raise ValueError(f"Stock insuficiente. Actual: {producto.stock}, Requerido: {cantidad}")
             producto.stock -= cantidad
-        self.db.commit()
-        self.db.refresh(producto)
+        if nuevo_precio is not None:
+            producto.precio = nuevo_precio
+        self.db.flush()
         return producto

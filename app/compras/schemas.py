@@ -17,6 +17,7 @@ class CompraCreate(BaseModel):
 class DetalleCompraResponse(BaseModel):
     id: int
     producto_id: int
+    producto_nombre: str | None=None 
     cantidad: int
     precio_unitario: float
     subtotal: float

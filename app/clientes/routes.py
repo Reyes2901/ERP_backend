@@ -19,9 +19,9 @@ def create_cliente(cliente: schemas.ClienteCreate, db: Session = Depends(get_db)
         raise HTTPException(status_code=e.code, detail=APIResponse.error_response(e.message).model_dump())
 
 @router.get("/", response_model=APIResponse[List[schemas.ClienteResponse]])
-def list_clientes(skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=100), db: Session = Depends(get_db)):
+def list_clientes(skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=100),nombre: str = Query(None,description="Busqueda por nombre", max_length=50),db: Session = Depends(get_db)):
     service = services.ClienteService(db)
-    clientes = service.get_all_clientes(skip, limit)
+    clientes = service.get_all_clientes(skip, limit,nombre)
     return APIResponse.success_response("Clientes obtenidos correctamente.", clientes)
 
 @router.get("/{cliente_id}", response_model=APIResponse[schemas.ClienteResponse])

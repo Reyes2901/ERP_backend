@@ -7,7 +7,7 @@ from app.inventario import routes as inventario_routes
 from app.compras import routes as compras_routes
 from app.ventas import routes as ventas_routes
 
-# Crear tablas en la base de datos (solo para desarrollo, en producción usar Alembic)
+# Crear tablas en la base de datos
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -18,23 +18,17 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Configuración de CORS (permite conexiones desde Flutter y IA local)
-origins = [
-    "http://localhost",
-    "http://localhost:8000",
-    "http://localhost:3000", # Para posible frontend web
-    "*" # Permisivo para desarrollo, en producción restringir a tus dominios.
-]
-
+# CONFIGURACIÓN DE CORS CORREGIDA PARA APK
+# Forzamos el ["*"] directamente en el middleware para evitar conflictos con la lista de orígenes
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # CRÍTICO: Esto permite que la APK conecte sin importar el protocolo
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Incluir los routers de los módulos
+# Incluir los routers de los módulos (Sin cambios aquí)
 app.include_router(clientes_routes.router, prefix="/api/clientes", tags=["Clientes"])
 app.include_router(inventario_routes.router, prefix="/api/inventario", tags=["Inventario"])
 app.include_router(compras_routes.router, prefix="/api/compras", tags=["Compras"])
@@ -47,3 +41,9 @@ async def root():
 @app.get("/health", tags=["Health"])
 async def health_check():
     return {"status": "ok"}
+
+# BLOQUE DE ARRANQUE OBLIGATORIO PARA RED LOCAL
+if __name__ == "__main__":
+    import uvicorn
+    # Escucha en 0.0.0.0 para que la IP 192.168.0.9 sea accesible desde la APK
+    uvicorn.run(app, host="0.0.0.0", port=8000)

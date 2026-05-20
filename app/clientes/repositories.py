@@ -7,8 +7,15 @@ class ClienteRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_all(self, skip: int = 0, limit: int = 100):
-        return self.db.query(models.Cliente).offset(skip).limit(limit).all()
+    def get_all(self, skip: int = 0, limit: int = 100, nombre: str = None):
+        # 1. Iniciamos la consulta base sin filtros
+        query = self.db.query(models.Cliente)   
+        # 2. SOLO si viene un nombre en la petición, aplicamos el filtro
+        if nombre and nombre.strip():
+            # ilike maneja el caso de "karla" vs "Karla" e incluye búsquedas parciales
+            query = query.filter(models.Cliente.nombre.ilike(f"%{nombre}%"))
+        # 3. Aplicamos la paginación y ejecutamos la consulta
+        return query.offset(skip).limit(limit).all()        
 
     def get_by_id(self, cliente_id: int):
         cliente = self.db.query(models.Cliente).filter(models.Cliente.id == cliente_id).first()
