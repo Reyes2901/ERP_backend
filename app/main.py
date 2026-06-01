@@ -6,6 +6,7 @@ from app.clientes import routes as clientes_routes
 from app.inventario import routes as inventario_routes
 from app.compras import routes as compras_routes
 from app.ventas import routes as ventas_routes
+from mangum import Mangum
 
 # Crear tablas en la base de datos
 Base.metadata.create_all(bind=engine)
@@ -47,3 +48,7 @@ if __name__ == "__main__":
     import uvicorn
     # Escucha en 0.0.0.0 para que la IP 192.168.0.9 sea accesible desde la APK
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+#
+handler = Mangum(app)

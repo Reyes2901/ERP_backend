@@ -1,21 +1,14 @@
-FROM python:3.13-slim
+# 1. Usar la imagen oficial de AWS Lambda para Python 3.11 (o la versión que estés usando)
+FROM public.ecr.aws/lambda/python:3.11
 
-WORKDIR /app
+# 2. Copiar el archivo de requerimientos al directorio raíz de la Lambda
+COPY requirements.txt ${LAMBDA_TASK_ROOT}
 
-# Evitar que Python escriba pyc y que la salida se almacene en buffer
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# 3. Instalar las dependencias de Python
+RUN pip install -r requirements.txt
 
-# Instalar dependencias del sistema (si es necesario, por ejemplo para psycopg2)
-RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
+# 4. Copiar toda tu carpeta "app" al contenedor
+COPY ./app ${LAMBDA_TASK_ROOT}/app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-# Puerto expuesto por Uvicorn
-EXPOSE 8000
-
-# Comando para iniciar el servidor
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# 5. Indicarle a Lambda dónde está el "handler" de Mangum
+CMD ["app.main.handler"]
